@@ -880,10 +880,21 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
         private void CheckFeatureAvailability(MessageID feature)
         {
             LanguageVersion availableVersion = this.Options.LanguageVersion;
-            var requiredVersion = feature.RequiredVersion();
-            if (availableVersion >= requiredVersion) return;
-            var featureName = feature.Localize();
-            this.AddError(availableVersion.GetErrorCode(), featureName, requiredVersion.Localize());
+            LanguageVersion? requiredVersion = feature.RequiredVersion();
+            if (requiredVersion.HasValue)
+            {
+                if (availableVersion >= requiredVersion.Value) return;
+                var featureName = feature.Localize();
+                this.AddError(availableVersion.GetErrorCode(), featureName, requiredVersion.Value.Localize());
+                return;
+            }
+            string requiredExtension = feature.RequiredExtension();
+            if (requiredExtension != null)
+            {
+                if (Options.Features.Contains(requiredExtension))
+                    return;
+                this.AddError(ErrorCode.ERR_FeatureIsExperimental, feature.Localize(), requiredExtension);
+            }
         }
 
         private bool ScanInteger()
@@ -898,11 +909,65 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
             return start < TextWindow.Position;
         }
 
+        // Allows underscores in integers, except at beginning and end
+        private void ScanNumericLiteralSingleInteger(StringBuilder builder, ref bool underscoreInWrongPlace, bool isHex, bool isBinary)
+        {
+            if (TextWindow.PeekChar() == '_')
+            {
+                underscoreInWrongPlace = true;
+            }
+
+            char ch;
+            var lastCharWasUnderscore = false;
+            while (true)
+            {
+                ch = TextWindow.PeekChar();
+                if (ch == '_')
+                {
+                    CheckFeatureAvailability(MessageID.IDS_FeatureDigitSeparator);
+                    lastCharWasUnderscore = true;
+                }
+                else
+                {
+                    if (isHex)
+                    {
+                        if (!SyntaxFacts.IsHexDigit(ch))
+                        {
+                            break;
+                        }
+                    }
+                    else if (isBinary)
+                    {
+                        if (!SyntaxFacts.IsBinaryDigit(ch))
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (!SyntaxFacts.IsDecDigit(ch))
+                        {
+                            break;
+                        }
+                    }
+                    _builder.Append(ch);
+                    lastCharWasUnderscore = false;
+                }
+                TextWindow.AdvanceChar();
+            }
+
+            if (lastCharWasUnderscore)
+            {
+                underscoreInWrongPlace = true;
+            }
+        }
+
         private bool ScanNumericLiteral(ref TokenInfo info)
         {
             int start = TextWindow.Position;
             char ch;
             bool isHex = false;
+            bool isBinary = false;
             bool hasDecimal = false;
             bool hasExponent = false;
             info.Text = null;
@@ -910,23 +975,30 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
             _builder.Clear();
             bool hasUSuffix = false;
             bool hasLSuffix = false;
+            bool underscoreInWrongPlace = false;
 
             ch = TextWindow.PeekChar();
-            if (ch == '0' && ((ch = TextWindow.PeekChar(1)) == 'x' || ch == 'X'))
+            if (ch == '0')
             {
-                TextWindow.AdvanceChar(2);
-                isHex = true;
+                ch = TextWindow.PeekChar(1);
+                if (ch == 'x' || ch == 'X')
+                {
+                    TextWindow.AdvanceChar(2);
+                    isHex = true;
+                }
+                else if (ch == 'b' || ch == 'B')
+                {
+                    CheckFeatureAvailability(MessageID.IDS_FeatureBinaryLiteral);
+                    TextWindow.AdvanceChar(2);
+                    isBinary = true;
+                }
             }
 
-            if (isHex)
+            if (isHex || isBinary)
             {
                 // It's OK if it has no digits after the '0x' -- we'll catch it in ScanNumericLiteral
                 // and give a proper error then.
-                while (SyntaxFacts.IsHexDigit(ch = TextWindow.PeekChar()))
-                {
-                    _builder.Append(ch);
-                    TextWindow.AdvanceChar();
-                }
+                ScanNumericLiteralSingleInteger(_builder, ref underscoreInWrongPlace, isHex, isBinary);
 
                 if ((ch = TextWindow.PeekChar()) == 'L' || ch == 'l')
                 {
@@ -956,11 +1028,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
             }
             else
             {
-                while ((ch = TextWindow.PeekChar()) >= '0' && ch <= '9')
-                {
-                    _builder.Append(ch);
-                    TextWindow.AdvanceChar();
-                }
+                ScanNumericLiteralSingleInteger(_builder, ref underscoreInWrongPlace, isHex: false, isBinary: false);
 
                 if (this.ModeIs(LexerMode.DebuggerSyntax) && TextWindow.PeekChar() == '#')
                 {
@@ -981,11 +1049,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                         _builder.Append(ch);
                         TextWindow.AdvanceChar();
 
-                        while ((ch = TextWindow.PeekChar()) >= '0' && ch <= '9')
-                        {
-                            _builder.Append(ch);
-                            TextWindow.AdvanceChar();
-                        }
+                        ScanNumericLiteralSingleInteger(_builder, ref underscoreInWrongPlace, isHex: false, isBinary: false);
                     }
                     else if (_builder.Length == 0)
                     {
@@ -1007,11 +1071,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                         TextWindow.AdvanceChar();
                     }
 
-                    while ((ch = TextWindow.PeekChar()) >= '0' && ch <= '9')
-                    {
-                        _builder.Append(ch);
-                        TextWindow.AdvanceChar();
-                    }
+                    ScanNumericLiteralSingleInteger(_builder, ref underscoreInWrongPlace, isHex: false, isBinary: false);
                 }
 
                 if (hasExponent || hasDecimal)
@@ -1078,6 +1138,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                 }
             }
 
+            if (underscoreInWrongPlace)
+            {
+                this.AddError(MakeError(start, TextWindow.Position - start, ErrorCode.ERR_InvalidNumber));
+            }
+
             info.Kind = SyntaxKind.NumericLiteralToken;
             info.Text = TextWindow.GetText(true);
             Debug.Assert(info.Text != null);
@@ -1102,7 +1167,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                     }
                     else
                     {
-                        val = this.GetValueUInt64(valueText, isHex);
+                        val = this.GetValueUInt64(valueText, isHex, isBinary);
                     }
 
                     // 2.4.4.2 Integer literals
@@ -1198,6 +1263,27 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
             return true;
         }
 
+        // TODO: Change to Int64.TryParse when it supports NumberStyles.AllowBinarySpecifier (inline this method into GetValueUInt32/64)
+        private bool TryParseBinaryUInt64(string text, out ulong value)
+        {
+            value = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                // if uppermost bit is set, then the next bitshift will overflow
+                if ((value & 0x8000000000000000) != 0)
+                {
+                    return false;
+                }
+                if (!SyntaxFacts.IsBinaryDigit(text[i]))
+                {
+                    return false;
+                }
+                var bit = (ulong)SyntaxFacts.DecValue(text[i]);
+                value = (value << 1) | bit;
+            }
+            return true;
+        }
+
         //used in directives
         private int GetValueInt32(string text, bool isHex)
         {
@@ -1212,10 +1298,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
         }
 
         //used for all non-directive integer literals (cast to desired type afterward)
-        private ulong GetValueUInt64(string text, bool isHex)
+        private ulong GetValueUInt64(string text, bool isHex, bool isBinary)
         {
             ulong result;
-            if (!UInt64.TryParse(text, isHex ? NumberStyles.AllowHexSpecifier : NumberStyles.None, CultureInfo.InvariantCulture, out result))
+            if (isBinary)
+            {
+                if (!TryParseBinaryUInt64(text, out result))
+                {
+                    this.AddError(MakeError(ErrorCode.ERR_IntOverflow));
+                }
+            }
+            else if (!UInt64.TryParse(text, isHex ? NumberStyles.AllowHexSpecifier : NumberStyles.None, CultureInfo.InvariantCulture, out result))
             {
                 //we've already lexed the literal, so the error must be from overflow
                 this.AddError(MakeError(ErrorCode.ERR_IntOverflow));
@@ -1744,7 +1837,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                         goto Fail;
                     }
                     // Parse hex value to check for overflow.
-                    this.GetValueUInt64(valueText, isHex: true);
+                    this.GetValueUInt64(valueText, isHex: true, isBinary: false);
                 }
 
                 return true;
