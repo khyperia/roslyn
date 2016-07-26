@@ -15956,7 +15956,7 @@ class Test
             );
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything doesn't suppress errors correctly")]
+        [Fact]
         public void CS1932ERR_QueryRangeVariableAssignedBadValue()
         {
             CreateCompilationWithMscorlibAndSystemCore(@"
@@ -15977,7 +15977,7 @@ class Test
              );
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything doesn't suppress errors correctly")]
+        [Fact]
         public void CS1932ERR_QueryRangeVariableAssignedBadValue02()
         {
             CreateCompilationWithMscorlibAndSystemCore(@"
@@ -15998,7 +15998,7 @@ class Test
              );
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything doesn't suppress errors correctly")]
+        [Fact]
         public void CS1932ERR_QueryRangeVariableAssignedBadValue03()
         {
             CreateCompilationWithMscorlibAndSystemCore(@"
@@ -16019,7 +16019,7 @@ class Test
              );
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything doesn't suppress errors correctly")]
+        [Fact]
         public void CS1932ERR_QueryRangeVariableAssignedBadValue04()
         {
             CreateCompilationWithMscorlibAndSystemCore(@"

@@ -1034,7 +1034,7 @@ static class S
                 );
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything broke this")]
+        [Fact(Skip = "PROTOTYPE: Extension Everything broke this (semanticInfo.Symbol == null)")]
         public void GenericExtensionDelegateMethod()
         {
             // Single applicable overload.

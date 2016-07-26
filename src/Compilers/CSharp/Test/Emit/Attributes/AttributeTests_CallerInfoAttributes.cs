@@ -2749,7 +2749,7 @@ C:\filename";
 
         [WorkItem(991476, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/991476")]
         [WorkItem(171, "CodePlex")]
-        [Fact(Skip = "PROTOTYPE: Extension Everything broke this")]
+        [Fact]
         public void Bug991476_2()
         {
             const string source =

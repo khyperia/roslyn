@@ -2,6 +2,7 @@
 
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Roslyn.Utilities;
@@ -918,7 +919,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             ParameterSymbol parameter = parm == -1 ? null : method.GetParameters()[parm];
             RefKind refArg = arguments.RefKind(arg);
             // PROTOTYPE: Resolve the issue of mixed extension overloads (old and new styles) and RefKinds.
-            var isByRef = receiver?.Type?.IsReferenceType == false && System.Linq.Enumerable.All(symbols, m => m.IsInExtensionClass);
+            var isByRef = receiver?.Type?.IsReferenceType == false && symbols.All(m => m.IsInExtensionClass);
             RefKind refParm = parameter?.RefKind ?? (isByRef ? RefKind.Ref : RefKind.None);
             TypeSymbol parameterType = parm == -1 ? (method is MethodSymbol ? ((MethodSymbol)(Symbol)method).ReceiverType : ((PropertySymbol)(Symbol)method).ReceiverType) : parameter.Type;
 

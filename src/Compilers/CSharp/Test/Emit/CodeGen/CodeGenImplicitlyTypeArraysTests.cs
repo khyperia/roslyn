@@ -96,7 +96,7 @@ namespace Test
                 expectedOutput: "True");
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything breaks this"), WorkItem(895655, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/895655")]
+        [Fact, WorkItem(895655, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/895655")]
         public void Test_004_Enum()
         {
             // Enums conversions
@@ -146,10 +146,10 @@ namespace Test
     // (15,21): error CS0826: No best type found for implicitly-typed array
     //             var a = new [] {E.START, 0, 0U, 0u, 0L, 0l, 0UL, 0Ul, 0uL, 0ul, 0LU, 0Lu, 0lU, 0lu};
     Diagnostic(ErrorCode.ERR_ImplicitlyTypedArrayNoBestType, "new [] {E.START, 0, 0U, 0u, 0L, 0l, 0UL, 0Ul, 0uL, 0ul, 0LU, 0Lu, 0lU, 0lu}").WithLocation(15, 21),
-    // (17,35): error CS1929: '?[]' does not contain a definition for 'SequenceEqual' and the best extension method overload 'System.Linq.Queryable.SequenceEqual<Test.Program.E>(System.Linq.IQueryable<Test.Program.E>, System.Collections.Generic.IEnumerable<Test.Program.E>)' requires a receiver of type 'System.Linq.IQueryable<Test.Program.E>'
+    // (17,35): error CS1929: '?[]' does not contain a definition for 'SequenceEqual' and the best extension method overload 'IQueryable<Program.E>.SequenceEqual<Program.E>(IEnumerable<Program.E>)' requires a receiver of type 'IQueryable<Program.E>'
     //              System.Console.Write(a.SequenceEqual(new E[]{E.START, 0, 0U, 0u, 0L, 0l, 0UL, 0Ul, 0uL, 0ul, 0LU, 0Lu, 0lU, 0lu}));
-    Diagnostic(ErrorCode.ERR_BadInstanceArgType, "a").WithArguments("?[]", "SequenceEqual", "System.Linq.Queryable.SequenceEqual<Test.Program.E>(System.Linq.IQueryable<Test.Program.E>, System.Collections.Generic.IEnumerable<Test.Program.E>)", "System.Linq.IQueryable<Test.Program.E>").WithLocation(17, 35)
-                );
+    Diagnostic(ErrorCode.ERR_BadInstanceArgType, "a").WithArguments("?[]", "SequenceEqual", "System.Linq.IQueryable<Test.Program.E>.SequenceEqual<Test.Program.E>(System.Collections.Generic.IEnumerable<Test.Program.E>)", "System.Linq.IQueryable<Test.Program.E>").WithLocation(17, 35)
+                   );
         }
 
         [Fact]

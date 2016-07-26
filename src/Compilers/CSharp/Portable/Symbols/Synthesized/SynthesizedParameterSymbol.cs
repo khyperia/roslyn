@@ -34,7 +34,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             Debug.Assert((object)type != null);
             Debug.Assert(name != null);
             Debug.Assert(ordinal >= 0);
-            Debug.Assert(container.Kind == SymbolKind.Method || container.Kind == SymbolKind.Property);
+            Debug.Assert((object)container == null || container.Kind == SymbolKind.Method || container.Kind == SymbolKind.Property);
 
             _container = container;
             _type = type;

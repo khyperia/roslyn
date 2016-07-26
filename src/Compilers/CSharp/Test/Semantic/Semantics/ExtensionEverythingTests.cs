@@ -968,7 +968,7 @@ class Program
                 parseOptions: parseOptions);
         }
 
-        [Fact(Skip = "PROTOTYPE: Fails due to ReducedExtension not disambiguating based on receiver.")]
+        [Fact]
         public void ArgumentOrdering()
         {
             // error CS0121: The call is ambiguous between the following methods or properties: 'IQueryable<int>.Sum()' and 'IQueryable<int?>.Sum()'
@@ -1004,9 +1004,9 @@ extension class ExtClass : BaseClass
         }
     }
     public int Func(int a, int b = 4, params int[] c) =>
-        Log(a + b + c.Sum(), ""("" + a + b + string.Join("","", c) + "")"");
+        Log(a + b + c.Sum(), ""("" + a + b + string.Join("""", c) + "")"");
     public static int StaticFunc(int a, int b = 4, params int[] c) =>
-        Log(a + b + c.Sum(), ""{"" + a + b + string.Join("","", c) + ""}"");
+        Log(a + b + c.Sum(), ""{"" + a + b + string.Join("""", c) + ""}"");
 }
 
 class Program
@@ -1014,8 +1014,12 @@ class Program
     static void Main()
     {
         Console.Write(Log(new BaseClass(), ""1"")[c: new[] { Log(1, ""2""), Log(2, ""3"") }, a: Log(3, ""4"")]);
+        Console.Write("","");
         Console.Write(Log(new BaseClass(), ""1"").Func(c: new[] { Log(1, ""2""), Log(2, ""3"") }, a: Log(3, ""4"")));
-        Console.Write(BaseClass.StaticFunc(c: new[] { Log(1, ""1""), Log(2, ""2"") }, a: Log(3, ""3"")));
+        Console.Write("","");
+        // will be missing a 1 in the output due to no receiver
+        Console.Write(BaseClass.StaticFunc(c: new[] { Log(1, ""2""), Log(2, ""3"") }, a: Log(3, ""4"")));
+        Console.Write("","");
         Log(new BaseClass(), ""1"")[c: new[] { Log(1, ""2""), Log(2, ""3"") }, a: Log(3, ""4"")] = 5;
     }
 }
@@ -1024,7 +1028,7 @@ class Program
             CompileAndVerify(
                 source: text,
                 additionalRefs: additionalRefs,
-                expectedOutput: "1234[3412]1234(3412)1234{3412}1234[3412]=5",
+                expectedOutput: "1234[3412]10,1234(3412)10,234{3412}10,1234[3412]=5",
                 parseOptions: parseOptions);
         }
 

@@ -2568,7 +2568,7 @@ class Y
                 Diagnostic(ErrorCode.WRN_UnreferencedVarAssg, "E").WithArguments("E").WithLocation(22, 11));
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything breaks this (this is one of the EmitArgument assert failures)"), WorkItem(546122, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/546122"), WorkItem(842476, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/842476")]
+        [Fact, WorkItem(546122, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/546122"), WorkItem(842476, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/842476")]
         public void RefOmittedComCall_ExtensionMethod()
         {
             string source = @"

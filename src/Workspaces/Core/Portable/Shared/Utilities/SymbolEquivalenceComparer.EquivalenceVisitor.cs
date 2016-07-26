@@ -207,7 +207,7 @@ namespace Microsoft.CodeAnalysis.Shared.Utilities
                     }
 
                     // receiver types are equivalent
-                    if (!AreEquivalent(x.ReceiverType, y.ReceiverType, equivalentTypesWithDifferingAssemblies))
+                    if (!x.IsDefinition && !y.IsDefinition && !AreEquivalent(x.ReceiverType, y.ReceiverType, equivalentTypesWithDifferingAssemblies))
                     {
                         return false;
                     }

@@ -1772,7 +1772,7 @@ public class X
 True");
         }
 
-        [Fact(Skip = "PROTOTYPE: Doesn't surpress cascading errors")]
+        [Fact]
         public void ScopeOfPatternVariables_Query_01()
         {
             var source =
