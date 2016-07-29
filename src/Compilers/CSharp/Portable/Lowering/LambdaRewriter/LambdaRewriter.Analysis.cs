@@ -568,7 +568,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         ReferenceVariable(node.Syntax, node.SymbolOpt.OriginalDefinition);
                         MethodsConvertedToDelegates.Add(node.SymbolOpt.OriginalDefinition);
                     }
-                    if ((object)node.SymbolOpt != null && !node.SymbolOpt.IsStatic)
+                    if (node.Operand.Kind == BoundKind.MethodGroup && (object)((BoundMethodGroup)node.Operand).ReceiverOpt != null)
                     {
                         return VisitSyntaxWithReceiver(node.Syntax, ((BoundMethodGroup)node.Operand).ReceiverOpt);
                     }

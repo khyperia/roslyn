@@ -37,7 +37,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             ImmutableArray<LocalSymbol> temps;
             ImmutableArray<RefKind> argumentRefKindsOpt = node.ArgumentRefKindsOpt;
             BoundExpression nullReceiver = null;
-            rewrittenArguments = MakeArguments(node.Syntax, rewrittenArguments, node.Constructor, node.Constructor, node.Expanded, node.ArgsToParamsOpt, ref nullReceiver, ref argumentRefKindsOpt, out temps);
+            rewrittenArguments = MakeArguments(node.Syntax, rewrittenArguments, node.Constructor, node.Constructor, node.Expanded, false, node.ArgsToParamsOpt, ref nullReceiver, ref argumentRefKindsOpt, out temps);
             Debug.Assert(nullReceiver == null);
 
             BoundExpression rewrittenObjectCreation;

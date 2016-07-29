@@ -14144,7 +14144,7 @@ public static class AExtensions
         }
 
         [WorkItem(877317, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/877317")]
-        [Fact(Skip = "PROTOTYPE: Extension Everything breaks this")]
+        [Fact]
         public void Repro877317()
         {
             var source = @"

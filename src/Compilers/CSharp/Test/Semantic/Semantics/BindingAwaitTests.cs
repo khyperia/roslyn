@@ -2764,7 +2764,7 @@ class Repro
             CompileAndVerify(comp, expectedOutput: "42");
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything broke this")]
+        [Fact]
         public void DynamicResultTypeCustomAwaiter()
         {
             const string source = @"

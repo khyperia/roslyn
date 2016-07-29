@@ -432,6 +432,29 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         /// <summary>
+        /// Returns true of this symbol is a reduced member from an extension class or method.
+        /// "Reduced" means that it is an extension member in instance form, with a receiver.
+        /// </summary>
+        public bool IsReducedExtensionMember
+        {
+            get
+            {
+                var thisKind = this.Kind;
+                // old-style extension method
+                if (thisKind == SymbolKind.Method && ((MethodSymbol)this).MethodKind == MethodKind.ReducedExtension)
+                {
+                    return true;
+                }
+                // new-style extension method and property
+                if ((thisKind == SymbolKind.Method || thisKind == SymbolKind.Property) && !this.IsStatic && this.IsInExtensionClass)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Returns true if this symbol can be referenced by its name in code. Examples of symbols
         /// that cannot be referenced by name are:
         ///    constructors, destructors, operators, explicit interface implementations,

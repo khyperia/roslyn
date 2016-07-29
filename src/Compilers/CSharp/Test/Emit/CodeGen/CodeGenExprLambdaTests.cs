@@ -2903,7 +2903,7 @@ Lambda:
         }
 
         [WorkItem(544277, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/544277")]
-        [Fact(Skip = "PROTOTYPE: Extension Everything breaks this")]
+        [Fact]
         public void ConvertExtensionMethodToDelegate()
         {
             var text =

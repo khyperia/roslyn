@@ -8297,7 +8297,7 @@ namespace ClassLibraryOverloadResolution
                 );
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything broke this"), WorkItem(4970, "https://github.com/dotnet/roslyn/issues/4970")]
+        [Fact, WorkItem(4970, "https://github.com/dotnet/roslyn/issues/4970")]
         public void GenericExtensionMethodWithConstraintsAsADelegate()
         {
             var source =

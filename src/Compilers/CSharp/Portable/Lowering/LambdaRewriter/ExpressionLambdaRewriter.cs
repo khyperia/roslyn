@@ -604,7 +604,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ConversionKind.MethodGroup:
                     {
                         var mg = (BoundMethodGroup)node.Operand;
-                        return DelegateCreation(mg.ReceiverOpt, node.SymbolOpt, node.Type, node.SymbolOpt.IsStatic);
+                        return DelegateCreation(mg.ReceiverOpt, node.SymbolOpt, node.Type);
                     }
                 case ConversionKind.ExplicitUserDefined:
                 case ConversionKind.ImplicitUserDefined:
@@ -660,9 +660,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             return ExprFactory(isChecked ? "ConvertChecked" : "Convert", expr, _bound.Typeof(type));
         }
 
-        private BoundExpression DelegateCreation(BoundExpression receiver, MethodSymbol method, TypeSymbol delegateType, bool staticMember)
+        private BoundExpression DelegateCreation(BoundExpression receiver, MethodSymbol method, TypeSymbol delegateType)
         {
             var nullObject = _bound.Null(_objectType);
+            var staticMember = method.IsStatic && !method.IsUnreducedExtensionMember;
             receiver = staticMember ? nullObject : receiver.Type.IsReferenceType ? receiver : _bound.Convert(_objectType, receiver);
 
             var createDelegate = _bound.WellKnownMethod(WellKnownMember.System_Reflection_MethodInfo__CreateDelegate, isOptional: true);
@@ -691,13 +692,13 @@ namespace Microsoft.CodeAnalysis.CSharp
             var mg = node.Argument as BoundMethodGroup;
             if (mg != null)
             {
-                return DelegateCreation(mg.ReceiverOpt, node.MethodOpt, node.Type, node.MethodOpt.IsStatic && !mg.SearchExtensionMethods);
+                return DelegateCreation(mg.ReceiverOpt, node.MethodOpt, node.Type);
             }
 
             var d = node.Argument.Type as NamedTypeSymbol;
             if ((object)d != null && d.TypeKind == TypeKind.Delegate)
             {
-                return DelegateCreation(node.Argument, d.DelegateInvokeMethod, node.Type, false);
+                return DelegateCreation(node.Argument, d.DelegateInvokeMethod, node.Type);
             }
 
             // there should be no other cases.  Have we missed one?

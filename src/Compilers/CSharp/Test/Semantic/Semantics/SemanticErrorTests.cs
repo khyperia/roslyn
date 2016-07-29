@@ -12838,7 +12838,7 @@ static class SC
                 Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "d.M5").WithArguments("double.M5()", "double").WithLocation(27, 29));
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything breaks this")]
+        [Fact]
         public void CS1113ERR_ValueTypeExtDelegate02()
         {
             var source =
@@ -12876,26 +12876,36 @@ static class E
     internal static void M2<T, U>(this T t) { }
 }";
             CreateCompilationWithMscorlib(source, references: new[] { SystemCoreRef }).VerifyDiagnostics(
-                // (13,13): error CS1113: Extension methods 'E.M1<int>(int)' defined on value type 'int' cannot be used to create delegates
-                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "i.M1").WithArguments("E.M1<int>(int)", "int").WithLocation(13, 13),
-                // (14,13): error CS1113: Extension methods 'E.M2<int, object>(int)' defined on value type 'int' cannot be used to create delegates
-                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "i.M2<int, object>").WithArguments("E.M2<int, object>(int)", "int").WithLocation(14, 13),
-                // (15,13): error CS1113: Extension methods 'E.M1<S>(S)' defined on value type 'S' cannot be used to create delegates
-                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "s.M1").WithArguments("E.M1<S>(S)", "S").WithLocation(15, 13),
-                // (16,13): error CS1113: Extension methods 'E.M2<S, object>(S)' defined on value type 'S' cannot be used to create delegates
-                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "s.M2<S, object>").WithArguments("E.M2<S, object>(S)", "S").WithLocation(16, 13),
-                // (17,13): error CS1113: Extension methods 'E.M1<T1>(T1)' defined on value type 'T1' cannot be used to create delegates
-                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t1.M1").WithArguments("E.M1<T1>(T1)", "T1").WithLocation(17, 13),
-                // (18,13): error CS1113: Extension methods 'E.M2<T1, object>(T1)' defined on value type 'T1' cannot be used to create delegates
-                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t1.M2<T1, object>").WithArguments("E.M2<T1, object>(T1)", "T1").WithLocation(18, 13),
-                // (21,13): error CS1113: Extension methods 'E.M1<T3>(T3)' defined on value type 'T3' cannot be used to create delegates
-                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t3.M1").WithArguments("E.M1<T3>(T3)", "T3").WithLocation(21, 13),
-                // (22,13): error CS1113: Extension methods 'E.M2<T3, object>(T3)' defined on value type 'T3' cannot be used to create delegates
-                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t3.M2<T3, object>").WithArguments("E.M2<T3, object>(T3)", "T3").WithLocation(22, 13),
-                // (23,13): error CS1113: Extension methods 'E.M1<T4>(T4)' defined on value type 'T4' cannot be used to create delegates
-                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t4.M1").WithArguments("E.M1<T4>(T4)", "T4").WithLocation(23, 13),
-                // (24,13): error CS1113: Extension methods 'E.M2<T4, object>(T4)' defined on value type 'T4' cannot be used to create delegates
-                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t4.M2<T4, object>").WithArguments("E.M2<T4, object>(T4)", "T4").WithLocation(24, 13));
+                // (13,13): error CS1113: Extension method 'int.M1<int>()' defined on value type 'int' cannot be used to create delegates
+                //         d = i.M1;
+                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "i.M1").WithArguments("int.M1<int>()", "int").WithLocation(13, 13),
+                // (14,13): error CS1113: Extension method 'int.M2<int, object>()' defined on value type 'int' cannot be used to create delegates
+                //         d = i.M2<int, object>;
+                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "i.M2<int, object>").WithArguments("int.M2<int, object>()", "int").WithLocation(14, 13),
+                // (15,13): error CS1113: Extension method 'S.M1<S>()' defined on value type 'S' cannot be used to create delegates
+                //         d = s.M1;
+                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "s.M1").WithArguments("S.M1<S>()", "S").WithLocation(15, 13),
+                // (16,13): error CS1113: Extension method 'S.M2<S, object>()' defined on value type 'S' cannot be used to create delegates
+                //         d = s.M2<S, object>;
+                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "s.M2<S, object>").WithArguments("S.M2<S, object>()", "S").WithLocation(16, 13),
+                // (17,13): error CS1113: Extension method 'T1.M1<T1>()' defined on value type 'T1' cannot be used to create delegates
+                //         d = t1.M1;
+                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t1.M1").WithArguments("T1.M1<T1>()", "T1").WithLocation(17, 13),
+                // (18,13): error CS1113: Extension method 'T1.M2<T1, object>()' defined on value type 'T1' cannot be used to create delegates
+                //         d = t1.M2<T1, object>;
+                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t1.M2<T1, object>").WithArguments("T1.M2<T1, object>()", "T1").WithLocation(18, 13),
+                // (21,13): error CS1113: Extension method 'T3.M1<T3>()' defined on value type 'T3' cannot be used to create delegates
+                //         d = t3.M1;
+                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t3.M1").WithArguments("T3.M1<T3>()", "T3").WithLocation(21, 13),
+                // (22,13): error CS1113: Extension method 'T3.M2<T3, object>()' defined on value type 'T3' cannot be used to create delegates
+                //         d = t3.M2<T3, object>;
+                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t3.M2<T3, object>").WithArguments("T3.M2<T3, object>()", "T3").WithLocation(22, 13),
+                // (23,13): error CS1113: Extension method 'T4.M1<T4>()' defined on value type 'T4' cannot be used to create delegates
+                //         d = t4.M1;
+                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t4.M1").WithArguments("T4.M1<T4>()", "T4").WithLocation(23, 13),
+                // (24,13): error CS1113: Extension method 'T4.M2<T4, object>()' defined on value type 'T4' cannot be used to create delegates
+                //         d = t4.M2<T4, object>;
+                Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "t4.M2<T4, object>").WithArguments("T4.M2<T4, object>()", "T4").WithLocation(24, 13));
         }
 
         [WorkItem(528758, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/528758")]
@@ -16434,7 +16444,7 @@ class Test
                 );
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything doesn't suppress errors correctly")]
+        [Fact(Skip = "PROTOTYPE: Extension Everything doesn't suppress errors correctly (No definition of ToList on '?')")]
         public void CS1947ERR_QueryRangeVariableReadOnly()
         {
             var program = @"
@@ -22967,7 +22977,7 @@ class Program
                );
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything breaks this")]
+        [Fact(Skip = "PROTOTYPE: No diagnostic emitted for extension collection initializer in expression tree lambda")]
         [WorkItem(915609, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/915609")]
         public void DictionaryInitializerInExprLambda1()
         {

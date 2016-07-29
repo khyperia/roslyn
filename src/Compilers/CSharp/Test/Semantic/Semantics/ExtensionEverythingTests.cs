@@ -756,6 +756,50 @@ class Program
         }
 
         [Fact]
+        public void NormalDelegate()
+        {
+            var text = @"
+using System;
+using System.Collections.Generic;
+
+static class Ext
+{
+    public static bool Foo<T>(this IEnumerable<T> enumer, double asdf)
+    {
+        return true;
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        IEnumerable<int> x = null;
+        Func<double, bool> f = x.Foo;
+        Console.Write(f(2.0));
+    }
+}
+";
+
+            CompileAndVerify(
+                source: text,
+                additionalRefs: additionalRefs,
+                expectedOutput: "True",
+                parseOptions: parseOptions)
+                .VerifyIL("Program.Main", @"{
+  // Code size       32 (0x20)
+  .maxstack  2
+  IL_0000:  ldnull
+  IL_0001:  ldftn      ""bool Ext.Foo<int>(System.Collections.Generic.IEnumerable<int>, double)""
+  IL_0007:  newobj     ""System.Func<double, bool>..ctor(object, System.IntPtr)""
+  IL_000c:  ldc.r8     2
+  IL_0015:  callvirt   ""bool System.Func<double, bool>.Invoke(double)""
+  IL_001a:  call       ""void System.Console.Write(bool)""
+  IL_001f:  ret
+}");
+        }
+
+        [Fact]
         public void Using()
         {
             var text = @"

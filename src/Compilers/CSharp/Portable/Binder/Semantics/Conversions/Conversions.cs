@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -124,6 +125,14 @@ namespace Microsoft.CodeAnalysis.CSharp
                 ? Conversion.InterpolatedString : Conversion.NoConversion;
         }
 
+        public static bool IsExtensionMethodGroup(BoundMethodGroup group)
+        {
+            // assert that either all of them are reduced, or none of them are reduced
+            Debug.Assert(group.Methods.All(m => m.IsReducedExtensionMember == group.Methods[0].IsReducedExtensionMember));
+            return group.Methods.Length > 0 ? group.Methods[0].IsReducedExtensionMember : false;
+        }
+
+
         /// <summary>
         /// Resolve method group based on the optional delegate invoke method.
         /// If the invoke method is null, ignore arguments in resolution.
@@ -133,7 +142,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             if ((object)delegateInvokeMethodOpt != null)
             {
                 var analyzedArguments = new AnalyzedArguments();
-                GetDelegateArguments(source.Syntax, analyzedArguments, delegateInvokeMethodOpt.Parameters, binder.Compilation);
+                GetDelegateArguments(source.Syntax, analyzedArguments, delegateInvokeMethodOpt.Parameters, isExtensionMethodInvocation: IsExtensionMethodGroup(source), compilation: binder.Compilation);
                 var resolution = binder.ResolveMethodGroup(source, analyzedArguments, isMethodGroupConversion: true, inferWithDynamic: true, useSiteDiagnostics: ref useSiteDiagnostics);
                 return resolution;
             }
@@ -254,7 +263,8 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             Debug.Assert((object)delegateType.DelegateInvokeMethod != null && !delegateType.DelegateInvokeMethod.HasUseSiteError,
                          "This method should only be called for valid delegate types");
-            GetDelegateArguments(syntax, analyzedArguments, delegateType.DelegateInvokeMethod.Parameters, Compilation);
+            // delegate Invoke method can never be an extension method
+            GetDelegateArguments(syntax, analyzedArguments, delegateType.DelegateInvokeMethod.Parameters, isExtensionMethodInvocation: false, compilation: Compilation);
             _binder.OverloadResolution.MethodInvocationOverloadResolution(
                 methodGroup.Methods, methodGroup.TypeArguments, analyzedArguments, methodGroup.Receiver, result, ref useSiteDiagnostics, isMethodGroupConversion: true);
             var conversion = ToConversion(result, methodGroup, delegateType);
@@ -264,7 +274,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             return conversion;
         }
 
-        public static void GetDelegateArguments(CSharpSyntaxNode syntax, AnalyzedArguments analyzedArguments, ImmutableArray<ParameterSymbol> delegateParameters, CSharpCompilation compilation)
+        public static void GetDelegateArguments(CSharpSyntaxNode syntax, AnalyzedArguments analyzedArguments, ImmutableArray<ParameterSymbol> delegateParameters, bool isExtensionMethodInvocation , CSharpCompilation compilation)
         {
             foreach (var p in delegateParameters)
             {
@@ -286,6 +296,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 analyzedArguments.Arguments.Add(new BoundParameter(syntax, parameter) { WasCompilerGenerated = true });
                 analyzedArguments.RefKinds.Add(parameter.RefKind);
             }
+            analyzedArguments.IsExtensionMethodInvocation = isExtensionMethodInvocation;
         }
 
         private static Conversion ToConversion(OverloadResolutionResult<MethodSymbol> result, MethodGroup methodGroup, NamedTypeSymbol delegateType)

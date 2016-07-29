@@ -1394,7 +1394,8 @@ namespace Microsoft.CodeAnalysis.CSharp
         private static TypeSymbol MethodGroupReturnType(Binder binder, BoundMethodGroup source, ImmutableArray<ParameterSymbol> delegateParameters, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
         {
             var analyzedArguments = AnalyzedArguments.GetInstance();
-            Conversions.GetDelegateArguments(source.Syntax, analyzedArguments, delegateParameters, binder.Compilation);
+            Conversions.GetDelegateArguments(source.Syntax, analyzedArguments, delegateParameters,
+                isExtensionMethodInvocation: Conversions.IsExtensionMethodGroup(source), compilation: binder.Compilation);
 
             var resolution = binder.ResolveMethodGroup(source, analyzedArguments, isMethodGroupConversion: true, useSiteDiagnostics: ref useSiteDiagnostics);
 

@@ -352,8 +352,7 @@ static class Program
         }
 
         [WorkItem(541145, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/541145")]
-        //[ClrOnlyFact]
-        [Fact(Skip = "PROTOTYPE: Extension Everything broke this")]
+        [ClrOnlyFact]
         public void CannotCreateDelegateToExtensionMethodOnValueType()
         {
             var source =
@@ -378,7 +377,7 @@ static class Program
 
         [WorkItem(528426, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/528426")]
         //[ClrOnlyFact]
-        [Fact(Skip = "PROTOTYPE: Ext Everything broke this case")]
+        [Fact(Skip = "PROTOTYPE: The generic overload is picked (should pick nongeneric)")]
         public void TypedReferenceCannotBeUsedAsTypeArgument()
         {
             var source =
@@ -2957,7 +2956,7 @@ static class C
                 Diagnostic(ErrorCode.ERR_ValueTypeExtDelegate, "x.Foo").WithArguments("'C.Foo(int)", "int").WithLocation(11, 14));
         }
 
-        [Fact(Skip = "PROTOTYPE: Extension Everything broke this")]
+        [Fact(Skip = "PROTOTYPE: Crashes in assert in Binder_Conversions.cs MethodGroupIsCompatibleWithDelegate (receiver type should be convertable)")]
         public void DelegateFromGenericExtensionMethod()
         {
             var source = @"
