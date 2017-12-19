@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Test.Utilities;
+using Microsoft.CodeAnalysis.Test.Utilities;
 using Xunit;
 
 namespace Microsoft.CodeAnalysis.CSharp.UnitTests
@@ -401,6 +403,48 @@ struct C
         }
 
         [Fact]
+        public void CustomOperatorDotDotWithIntConversion()
+        {
+            var source = @"
+class C
+{
+    public static object operator..(C left, C right)
+    {
+        System.Console.Write(""ok"");
+        return null;
+    }
+    public static implicit operator int(C self) => 2;
+    static void Main()
+    {
+        var x = new C()..new C();
+    }
+}
+";
+            CompileAndVerify(new[] { RangeStruct, source }, expectedOutput: "ok");
+        }
+
+        [Fact]
+        public void CustomTypeIntConversion()
+        {
+            var source = @"
+using System;
+class C
+{
+    public static implicit operator int(C self) => 2;
+    static void Main()
+    {
+        var x = new C()..new C();
+        Console.Write(string.Join("","",
+            x.GetType().Name,
+            x.Start
+        ));
+    }
+}
+";
+            CompileAndVerify(new[] { RangeStruct, source }, expectedOutput: "Range,2");
+        }
+
+        [Fact]
         public void LongRange()
         {
             var source = @"
@@ -486,6 +530,121 @@ struct C
                 // (9,17): error CS0019: Operator '..' cannot be applied to operands of type 'double' and 'double'
                 //         var d = ((double)2)..((double)4);
                 Diagnostic(ErrorCode.ERR_BadBinaryOps, "((double)2)..((double)4)").WithArguments("..", "double", "double").WithLocation(9, 17)
+            );
+        }
+
+        [Fact]
+        public void BadCreateSignature()
+        {
+            var source = @"
+namespace System
+{
+    public struct Range
+    {
+        public Range Create(int start, int last) => new Range();
+        public static Range Create(int start) => new Range();
+        public static Range Create(int start, int last, int step) => new Range();
+        public static Range Create(bool start, bool last) => new Range();
+        public static Range Create(int start, long last) => new Range();
+        public static Range Create(long start, int last) => new Range();
+    }
+    public struct LongRange
+    {
+        public LongRange Create(long start, long last) => new LongRange();
+        public static LongRange Create(long start) => new LongRange();
+        public static LongRange Create(long start, long last, long step) => new LongRange();
+        public static LongRange Create(bool start, bool last) => new LongRange();
+        public static LongRange Create(int start, long last) => new LongRange();
+        public static LongRange Create(long start, int last) => new LongRange();
+    }
+}
+struct C
+{
+    static void Main()
+    {
+        var a = 0..2;
+        var b = 0L..2L;
+    }
+}
+";
+
+            CreateStandardCompilation(source).VerifyDiagnostics(
+                // (27,17): error CS8373: Cannot create a range value because the compiler required type 'System.Range' cannot be found. Are you missing a reference?
+                //         var a = 0..2;
+                Diagnostic(ErrorCode.ERR_RangeNotFound, "0..2").WithArguments("System.Range").WithLocation(27, 17),
+                // (28,17): error CS8373: Cannot create a range value because the compiler required type 'System.LongRange' cannot be found. Are you missing a reference?
+                //         var b = 0L..2L;
+                Diagnostic(ErrorCode.ERR_RangeNotFound, "0L..2L").WithArguments("System.LongRange").WithLocation(28, 17)
+            );
+        }
+
+        [Fact]
+        public void AmbigOperatorDotDotCreate()
+        {
+            var source = @"
+namespace System
+{
+    public class Object { }
+    public abstract class ValueType { }
+    public struct Void { }
+    public struct Range
+    {
+        public static Range Create(int start, int last) => new Range();
+    }
+    public struct Int32
+    {
+        public static Range operator ..(int start, int last) => new Range();
+    }
+}
+struct C
+{
+    static void Main()
+    {
+        var a = 0..2;
+    }
+}
+";
+            var compilation = CompileAndVerify(CreateCompilation(source), verify: Verification.Skipped);
+            compilation.VerifyIL("C.Main",
+@"{
+  // Code size        9 (0x9)
+  .maxstack  2
+  IL_0000:  ldc.i4.0
+  IL_0001:  ldc.i4.2
+  IL_0002:  call       ""System.Range System.Range.Create(int, int)""
+  IL_0007:  pop
+  IL_0008:  ret
+}");
+        }
+
+        [Fact]
+        public void OnlyOperatorDotDot()
+        {
+            var source = @"
+namespace System
+{
+    public class Object { }
+    public abstract class ValueType { }
+    public struct Void { }
+    public struct Range { }
+    public struct Int32
+    {
+        public static Range operator..(int start, int last) => new Range();
+    }
+}
+struct C
+{
+    static void Main()
+    {
+        var a = 0..2;
+    }
+}
+";
+            // Range.Create is built-in, so if the args are (int,int), we enforce Create()
+            CreateCompilation(source).VerifyDiagnostics(
+                // (17,17): error CS8373: Cannot create a range value because the compiler required type 'System.Range' cannot be found. Are you missing a reference?
+                //         var a = 0..2;
+                Diagnostic(ErrorCode.ERR_RangeNotFound, "0..2").WithArguments("System.Range").WithLocation(17, 17)
             );
         }
     }
